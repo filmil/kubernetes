@@ -78,7 +78,7 @@ ENABLE_CLUSTER_DASHBOARD=${KUBE_ENABLE_CLUSTER_DASHBOARD:-false}
 ENABLE_APISERVER_BASIC_AUDIT=${ENABLE_APISERVER_BASIC_AUDIT:-false}
 
 # RBAC Mode options
-AUTHORIZATION_MODE=${AUTHORIZATION_MODE:-"Node,RBAC"}
+AUTHORIZATION_MODE=${AUTHORIZATION_MODE:-"Webhook,Node,RBAC"}
 KUBECONFIG_TOKEN=${KUBECONFIG_TOKEN:-""}
 AUTH_ARGS=${AUTH_ARGS:-""}
 
@@ -216,7 +216,7 @@ API_CORS_ALLOWED_ORIGINS=${API_CORS_ALLOWED_ORIGINS:-/127.0.0.1(:[0-9]+)?$,/loca
 KUBELET_PORT=${KUBELET_PORT:-10250}
 LOG_LEVEL=${LOG_LEVEL:-3}
 # Use to increase verbosity on particular files, e.g. LOG_SPEC=token_controller*=5,other_controller*=4
-LOG_SPEC=${LOG_SPEC:-""}
+LOG_SPEC=${LOG_SPEC:-"config=9,server=9"}
 LOG_DIR=${LOG_DIR:-"/tmp"}
 CONTAINER_RUNTIME=${CONTAINER_RUNTIME:-"docker"}
 CONTAINER_RUNTIME_ENDPOINT=${CONTAINER_RUNTIME_ENDPOINT:-""}
@@ -506,6 +506,9 @@ function start_apiserver {
     APISERVER_LOG=${LOG_DIR}/kube-apiserver.log
     ${CONTROLPLANE_SUDO} "${GO_OUT}/hyperkube" apiserver ${swagger_arg} ${audit_arg} ${authorizer_arg} ${priv_arg} ${runtime_config}\
       ${advertise_address} \
+      --authorization-webhook-use-service-resolution \
+      --authorization-webhook-config-file=$HOME/code/go/src/github.com/google/stolos/deploy/authorizer/local/authz.yaml.m4 \
+      --enable-aggregator-routing=true \
       --v=${LOG_LEVEL} \
       --vmodule="${LOG_SPEC}" \
       --cert-dir="${CERT_DIR}" \
@@ -650,6 +653,7 @@ function start_kubelet {
       fi
 
       sudo -E "${GO_OUT}/hyperkube" kubelet ${priv_arg}\
+        --log_backtrace_at=remote_image.go:108 \
         --v=${LOG_LEVEL} \
         --vmodule="${LOG_SPEC}" \
         --chaos-chance="${CHAOS_CHANCE}" \

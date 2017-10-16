@@ -92,7 +92,7 @@ func TestAuthorizationWebhookDialer(t *testing.T) {
 			defaultTransport = nil
 		}
 		transport = &http.Transport{
-			Dial: buildWebhookDialer(&resolver, defaultTransport)}
+			Dial: buildAuthorizationWebhookDialer(&resolver, defaultTransport)}
 		client := &http.Client{Transport: transport}
 		response, err := client.Get(ttt.serverAddress)
 		if err != nil {

@@ -115,6 +115,12 @@ func NewPluginInitializer(
 	}
 }
 
+// SetServiceResolver sets the service resolver which is needed by some plugins.
+func (i *PluginInitializer) SetServiceResolver(s ServiceResolver) *PluginInitializer {
+	i.serviceResolver = s
+	return i
+}
+
 // Initialize checks the initialization interfaces implemented by each plugin
 // and provide the appropriate initialization data
 func (i *PluginInitializer) Initialize(plugin admission.Interface) {

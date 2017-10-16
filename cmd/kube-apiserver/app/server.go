@@ -44,7 +44,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	utilwait "k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apiserver/pkg/admission"
-	"k8s.io/apiserver/pkg/admission/plugin/webhook/webhook"
 	"k8s.io/apiserver/pkg/authentication/authenticator"
 	"k8s.io/apiserver/pkg/authorization/authorizer"
 	genericapiserver "k8s.io/apiserver/pkg/server"
@@ -481,10 +480,36 @@ func BuildGenericConfig(s *options.ServerRunOptions, proxyTransport *http.Transp
 		return nil, nil, nil, nil, nil, fmt.Errorf("failed to create admission plugin initializer: %v", err)
 	}
 
+	webhookClientConfig := rest.AnonymousClientConfig(genericConfig.LoopbackClientConfig)
+	if proxyTransport != nil && proxyTransport.Dial != nil {
+		webhookClientConfig.Dial = proxyTransport.Dial
+	}
+	// TODO: this is the wrong cert/key pair.
+	// Given the generic case of webhook admission from a generic apiserver,
+	// this key pair should be signed by the the API server's client CA.
+	// Read client cert/key for plugins that need to make calls out
+	certBytes, keyBytes := []byte{}, []byte{}
+	if len(s.ProxyClientCertFile) > 0 && len(s.ProxyClientKeyFile) > 0 {
+		var err error
+		certBytes, err = ioutil.ReadFile(s.ProxyClientCertFile)
+		if err != nil {
+			return nil, nil, nil, nil, nil, fmt.Errorf("failed to read proxy client cert file from: %s, err: %v", s.ProxyClientCertFile, err)
+		}
+		keyBytes, err = ioutil.ReadFile(s.ProxyClientKeyFile)
+		if err != nil {
+			return nil, nil, nil, nil, nil, fmt.Errorf("failed to read proxy client key file from: %s, err: %v", s.ProxyClientKeyFile, err)
+		}
+		webhookClientConfig.TLSClientConfig.CertData = certBytes
+		webhookClientConfig.TLSClientConfig.KeyData = keyBytes
+	}
+	webhookClientConfig.UserAgent = "kube-apiserver-admission"
+	webhookClientConfig.Timeout = 30 * time.Second
+
 	err = s.Admission.ApplyTo(
 		genericConfig,
 		versionedInformers,
 		kubeClientConfig,
+		webhookClientConfig,
 		legacyscheme.Scheme,
 		pluginInitializer)
 	if err != nil {
@@ -664,11 +689,10 @@ func defaultOptions(s *options.ServerRunOptions) error {
 	if err := kubeoptions.DefaultAdvertiseAddress(s.GenericServerRunOptions, s.InsecureServing); err != nil {
 		return err
 	}
-	serviceIPRange, apiServerServiceIP, err := master.DefaultServiceIPRange(s.ServiceClusterIPRange)
+	_, apiServerServiceIP, err := master.DefaultServiceIPRange(s.ServiceClusterIPRange)
 	if err != nil {
 		return fmt.Errorf("error determining service IP ranges: %v", err)
 	}
-	s.ServiceClusterIPRange = serviceIPRange
 	if err := s.SecureServing.MaybeDefaultWithSelfSignedCerts(s.GenericServerRunOptions.AdvertiseAddress.String(), []string{"kubernetes.default.svc", "kubernetes.default", "kubernetes"}, []net.IP{apiServerServiceIP}); err != nil {
 		return fmt.Errorf("error creating self-signed certificates: %v", err)
 	}

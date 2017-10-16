@@ -23,8 +23,11 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/golang/glog"
+
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/labels"
 	listersv1 "k8s.io/client-go/listers/core/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -42,6 +45,11 @@ func findServicePort(svc *v1.Service, port intstr.IntOrString) (*v1.ServicePort,
 
 // ResourceLocation returns a URL to which one can send traffic for the specified service.
 func ResolveEndpoint(services listersv1.ServiceLister, endpoints listersv1.EndpointsLister, namespace, id string) (*url.URL, error) {
+	all, err := services.Services(namespace).List(labels.Everything())
+	if err != nil {
+		return nil, fmt.Errorf("Can't list services at: %v: %v", namespace, err)
+	}
+	glog.V(4).Infof("Listing namespace: %v:\nall=%+v", namespace, all)
 	svc, err := services.Services(namespace).Get(id)
 	if err != nil {
 		return nil, err
@@ -93,6 +101,11 @@ func ResolveEndpoint(services listersv1.ServiceLister, endpoints listersv1.Endpo
 }
 
 func ResolveCluster(services listersv1.ServiceLister, namespace, id string) (*url.URL, error) {
+	all, err := services.Services(namespace).List(labels.Everything())
+	if err != nil {
+		return nil, fmt.Errorf("Can't list services at: %v: %v", namespace, err)
+	}
+	glog.V(4).Infof("Listing namespace: %v:\nall=%+v", namespace, all)
 	svc, err := services.Services(namespace).Get(id)
 	if err != nil {
 		return nil, err

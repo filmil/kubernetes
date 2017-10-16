@@ -30,6 +30,7 @@ go_library(
     importpath = "k8s.io/apiserver/plugin/pkg/authorizer/webhook",
     deps = [
         "//vendor/github.com/golang/glog:go_default_library",
+        "//vendor/github.com/pkg/errors:go_default_library",
         "//vendor/k8s.io/api/authorization/v1beta1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apimachinery/registered:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/runtime/schema:go_default_library",
@@ -39,6 +40,7 @@ go_library(
         "//vendor/k8s.io/apiserver/pkg/util/webhook:go_default_library",
         "//vendor/k8s.io/client-go/kubernetes/scheme:go_default_library",
         "//vendor/k8s.io/client-go/kubernetes/typed/authorization/v1beta1:go_default_library",
+        "//vendor/k8s.io/client-go/rest:go_default_library",
     ],
 )
 

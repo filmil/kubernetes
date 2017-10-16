@@ -9,7 +9,6 @@ load(
 go_test(
     name = "go_default_test",
     srcs = ["server_test.go"],
-    importpath = "k8s.io/kubernetes/cmd/kube-apiserver/app",
     library = ":go_default_library",
 )
 
@@ -38,6 +37,7 @@ go_library(
         "//pkg/kubeapiserver:go_default_library",
         "//pkg/kubeapiserver/admission:go_default_library",
         "//pkg/kubeapiserver/authenticator:go_default_library",
+        "//pkg/kubeapiserver/authorizer:go_default_library",
         "//pkg/kubeapiserver/authorizer/modes:go_default_library",
         "//pkg/kubeapiserver/options:go_default_library",
         "//pkg/kubeapiserver/server:go_default_library",
@@ -77,6 +77,7 @@ go_library(
         "//vendor/k8s.io/apiserver/pkg/server/options/encryptionconfig:go_default_library",
         "//vendor/k8s.io/apiserver/pkg/server/storage:go_default_library",
         "//vendor/k8s.io/apiserver/pkg/storage/etcd3/preflight:go_default_library",
+        "//vendor/k8s.io/apiserver/plugin/pkg/authorizer/webhook:go_default_library",
         "//vendor/k8s.io/client-go/informers:go_default_library",
         "//vendor/k8s.io/client-go/kubernetes:go_default_library",
         "//vendor/k8s.io/client-go/rest:go_default_library",

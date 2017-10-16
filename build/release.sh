@@ -30,10 +30,11 @@ source "${KUBE_ROOT}/build/common.sh"
 source "${KUBE_ROOT}/build/lib/release.sh"
 
 KUBE_RELEASE_RUN_TESTS=${KUBE_RELEASE_RUN_TESTS-y}
+CROSS=${CROSS:-}
 
 kube::build::verify_prereqs
 kube::build::build_image
-kube::build::run_build_command make cross
+kube::build::run_build_command make ${CROSS}
 
 if [[ $KUBE_RELEASE_RUN_TESTS =~ ^[yY]$ ]]; then
   kube::build::run_build_command make test

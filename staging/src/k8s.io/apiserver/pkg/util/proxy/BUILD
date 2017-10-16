@@ -25,8 +25,10 @@ go_library(
     srcs = ["proxy.go"],
     importpath = "k8s.io/apiserver/pkg/util/proxy",
     deps = [
+        "//vendor/github.com/golang/glog:go_default_library",
         "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/errors:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/labels:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/util/intstr:go_default_library",
         "//vendor/k8s.io/client-go/listers/core/v1:go_default_library",
     ],
